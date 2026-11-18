@@ -1,0 +1,6 @@
+# Domains never treated as disposable, whatever disposable.txt says.
+#
+# Kept here by hand. The upstream list had one until April 2026, when it was
+# dropped as checking each new entry made it unnecessary, so bin/refresh.php
+# leaves this file alone. Add a domain the list gets wrong -- one real
+# customers use -- one per line, lower case. Lines starting # are comments.

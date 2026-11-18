@@ -1,0 +1,5 @@
+# a comment
+
+Mailinator.com
+tempmail.example
+listed.allowed.example

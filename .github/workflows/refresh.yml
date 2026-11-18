@@ -1,0 +1,37 @@
+name: Refresh the list
+
+# Weekly, and on demand: rebuild data/disposable.txt from upstream and commit
+# it when it changed. bin/refresh.php refuses an error page or a truncated
+# download, so a bad fetch fails here instead of shipping.
+on:
+  schedule:
+    - cron: '0 4 * * 0'   # Sundays, 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Rebuild the list
+        run: php bin/refresh.php
+
+      - name: Commit when it changed
+        run: |
+          git diff --quiet data/ && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/disposable.txt
+          git commit -m "Refresh the disposable domain list"
+          git push
