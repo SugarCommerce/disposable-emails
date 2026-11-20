@@ -27,9 +27,19 @@
 
 declare( strict_types=1 );
 
-require_once dirname( __DIR__ ) . '/src/Checker.php';
-
 use SugarCommerce\DisposableEmails\Checker;
+
+// Runs without Composer's install (the weekly workflow does not do one), so
+// the package's own classes are found here.
+spl_autoload_register(
+	static function ( string $class_name ): void {
+		$prefix = 'SugarCommerce\\DisposableEmails\\';
+
+		if ( str_starts_with( $class_name, $prefix ) ) {
+			require dirname( __DIR__ ) . '/src/' . str_replace( '\\', '/', substr( $class_name, strlen( $prefix ) ) ) . '.php';
+		}
+	}
+);
 
 const SOURCE  = 'https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/main/disposable_email_blocklist.conf';
 const MINIMUM = 5000;
