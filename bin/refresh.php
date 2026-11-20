@@ -88,7 +88,9 @@ if ( isset( $files[0] ) ) {
 		]
 	);
 	$text    = file_get_contents( SOURCE, false, $context );
-	$status  = $http_response_header[0] ?? '';
+	// $http_response_header is deprecated from PHP 8.5; its replacement is 8.4's.
+	$headers = function_exists( 'http_get_last_response_headers' ) ? http_get_last_response_headers() : ( $http_response_header ?? [] );
+	$status  = $headers[0] ?? '';
 	$from    = SOURCE;
 
 	if ( ! preg_match( '#^HTTP/\S+ 200\b#', $status ) ) {

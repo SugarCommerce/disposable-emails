@@ -80,7 +80,7 @@ trait CustomFiles {
 	 */
 	private static function read_json( string $file ): array {
 		$text    = is_readable( $file ) ? file_get_contents( $file ) : false;
-		$decoded = false === $text ? null : json_decode( $text, true );
+		$decoded = false === $text || ! json_validate( $text ) ? null : json_decode( $text, true );
 		$entries = [];
 
 		foreach ( is_array( $decoded ) ? $decoded : [] as $domain ) {

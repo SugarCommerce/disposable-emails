@@ -59,7 +59,7 @@ final class Checker {
 	/**
 	 * What a line of a list must look like: a host name, lower case.
 	 */
-	public const DOMAIN_PATTERN = '/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,63}$/';
+	public const string DOMAIN_PATTERN = '/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,63}$/';
 
 	/**
 	 * The instance shared() hands out.
