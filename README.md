@@ -96,40 +96,27 @@ it every Sunday and commits the file when it changed.
 `data/allowlist.txt` is kept by hand: upstream dropped its allowlist in April
 2026. Add a domain the list gets wrong there, one per line.
 
-## Moving from arraypress/email-blocklist
+## Security
 
-| Was | Now |
-|---|---|
-| `ArrayPress\EmailBlocklist\Blocklist` | `SugarCommerce\DisposableEmails\Checker` -- every method below the same name |
-| `new Blocklist( $blocked, $allowed, $data_path )` | `new Checker( $blocked, $allowed, $data_path )` |
-| `is_disposable()`, `is_blocked()`, `is_allowed()`, `count()` | the same |
-| `block()`, `allow()`, `unblock()`, `disallow()`, `clear_custom()` | the same |
-| `add_blocked()`, `remove_blocked()`, `add_allowed()`, `remove_allowed()` | the same |
-| `load_custom_blocked()`, `load_custom_allowed()`, `save_custom_blocked()`, `save_custom_allowed()` | the same |
-| `is_custom_blocked()`, `is_custom_allowed()`, `get_custom_blocked()`, `get_custom_allowed()`, `get_custom_blocked_count()`, `get_custom_allowed_count()` | the same |
-| `get_blocked()` (deprecated) | `get_custom_blocked()` |
-| `clear( $persist )` (deprecated) | `clear_custom( $persist )` |
-| `ArrayPress\EmailBlocklist\Traits\CustomLists` | folded into `Checker` |
-| `is_disposable_email( $email )` | `Checker::shared()->is_disposable( $email )` |
-| `get_email_blocklist( $blocked, $allowed )` | `new Checker( $blocked, $allowed )` |
-| `.github/workflows/update-blocklist.yml` | `bin/refresh.php`, run by `.github/workflows/refresh.yml` |
-
-The global helpers are gone: a global function is the one thing Strauss
-cannot prefix, so two plugins bundling different copies shared whichever
-loaded first.
-
-Answers that changed:
-
-* `data/allowlist.txt` held `404: Not Found` -- the refresh fetched an
-  upstream file that no longer exists. It is now kept by hand, and the refresh
-  refuses anything that is not a list of domains.
-* An address with an empty domain (`pat@`) is nothing, never looked up.
-* A custom list file that is not a JSON list is an empty list, not an error.
+* Another spelling of a listed domain is the listed domain: upper case, a
+  trailing dot, full-width letters, an ideographic full stop and other
+  Unicode forms are looked up as their plain or xn-- form (Unicode needs the
+  intl extension)
+* A subdomain of a listed domain, or of one you block, is caught; a domain
+  you allow lets in only itself
+* A domain longer than DNS allows is not taken apart, so a huge address
+  posted to a form costs nothing
+* The refresh fetches from one fixed https host with TLS verified, follows
+  no redirect, reads at most 16 MB, and refuses anything that is not a list
+  of domains -- an error page or a truncated download never ships
+* A custom list file that is not a JSON list is an empty list; nothing is
+  unserialized
 
 ## Requirements
 
 * PHP 8.3 or later
 * WordPress 7.1 or later
+* The intl extension, to look up a Unicode domain
 
 ## License
 

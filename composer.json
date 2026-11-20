@@ -13,6 +13,9 @@
   "require": {
     "php": ">=8.3"
   },
+  "suggest": {
+    "ext-intl": "Looks up a Unicode domain -- and a full-width one -- as its xn-- form, so it cannot slip past the list."
+  },
   "autoload": {
     "psr-4": {
       "SugarCommerce\\DisposableEmails\\": "src/"
