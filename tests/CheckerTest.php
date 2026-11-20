@@ -119,6 +119,7 @@ final class CheckerTest extends TestCase {
 			'full-width letters'        => [ "pat@\u{FF4D}\u{FF41}\u{FF49}\u{FF4C}\u{FF49}\u{FF4E}\u{FF41}\u{FF54}\u{FF4F}\u{FF52}.com" ],
 			'ideographic full stop'     => [ "pat@mailinator\u{3002}com" ],
 			'subdomain, trailing dot'   => [ 'pat@x.Mailinator.com.' ],
+			'soft hyphen inside'        => [ "pat@mail\u{00AD}inator.com" ],
 			'blocked, as typed'         => [ 'pat@spam.example' ],
 			'blocked, full-width'       => [ "pat@\u{FF53}pam.example" ],
 		];
@@ -138,6 +139,26 @@ final class CheckerTest extends TestCase {
 		// not "ss" -- strasse.example is somebody else's domain.
 		$this->assertTrue( $checker->block( "stra\u{00DF}e.example" )->is_custom_blocked( 'xn--strae-oqa.example' ) );
 		$this->assertFalse( $checker->is_disposable( 'pat@strasse.example' ) );
+	}
+
+	/**
+	 * A domain longer than DNS allows is no domain, and is not taken apart:
+	 * an address of 80,000 dots posted to a signup form took seconds of CPU,
+	 * the time growing with the square of its length.
+	 */
+	public function test_a_domain_longer_than_dns_allows_is_nothing(): void {
+		$longest = str_repeat( str_repeat( 'a', 62 ) . '.', 3 ) . str_repeat( 'b', 49 ) . '.mailinator.com';
+		$checker = $this->checker();
+
+		$this->assertSame( 253, strlen( $longest ) );
+		$this->assertTrue( $checker->is_disposable( 'pat@' . $longest ) );
+		$this->assertTrue( $checker->is_disposable( 'pat@' . $longest . '.' ) );
+		$this->assertFalse( $checker->is_disposable( 'pat@a' . $longest ) );
+
+		$start = microtime( true );
+
+		$this->assertFalse( $checker->is_blocked( 'pat@' . str_repeat( 'a.', 40000 ) . 'mailinator.com' ) );
+		$this->assertLessThan( 0.5, microtime( true ) - $start );
 	}
 
 	/**

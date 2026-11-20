@@ -20,6 +20,11 @@ namespace SugarCommerce\DisposableEmails\Traits\Checker;
 trait Domains {
 
 	/**
+	 * The longest a host name can be in DNS.
+	 */
+	private const int LONGEST = 253;
+
+	/**
 	 * Whether a domain, or any domain it is under, is in a list. The bare
 	 * top-level domain is not asked about.
 	 *
@@ -88,6 +93,9 @@ trait Domains {
 	 * are `mailinator.com`. Without the intl extension a Unicode name is
 	 * left as it is, and matches nothing.
 	 *
+	 * Longer than DNS allows is no host name at all: '', so nothing takes
+	 * apart a megabyte of dots label by label.
+	 *
 	 * @param string $domain The domain.
 	 *
 	 * @return string
@@ -100,6 +108,8 @@ trait Domains {
 			$domain = false === $ascii ? $domain : $ascii;
 		}
 
-		return rtrim( strtolower( $domain ), '.' );
+		$domain = rtrim( strtolower( $domain ), '.' );
+
+		return strlen( $domain ) > self::LONGEST ? '' : $domain;
 	}
 }
