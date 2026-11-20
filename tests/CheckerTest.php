@@ -93,6 +93,54 @@ final class CheckerTest extends TestCase {
 	}
 
 	/**
+	 * Another way of writing a listed domain is still the listed domain: a
+	 * mail server delivers to every one of these as it would to the plain
+	 * form, so none may slip past.
+	 *
+	 * @param string $email The address.
+	 */
+	#[DataProvider( 'other_spellings' )]
+	public function test_other_spellings_of_a_listed_domain_are_caught( string $email ): void {
+		$checker = $this->checker( [ 'Ｓｐａｍ.example.' ] );
+
+		$this->assertTrue( $checker->is_disposable( $email ) );
+		$this->assertTrue( $checker->is_blocked( $email ) );
+	}
+
+	/**
+	 * Spellings of mailinator.com and of a domain you blocked.
+	 *
+	 * @return array
+	 */
+	public static function other_spellings(): array {
+		return [
+			'trailing dot'              => [ 'pat@mailinator.com.' ],
+			'upper case, trailing dot'  => [ 'pat@MAILINATOR.COM.' ],
+			'full-width letters'        => [ "pat@\u{FF4D}\u{FF41}\u{FF49}\u{FF4C}\u{FF49}\u{FF4E}\u{FF41}\u{FF54}\u{FF4F}\u{FF52}.com" ],
+			'ideographic full stop'     => [ "pat@mailinator\u{3002}com" ],
+			'subdomain, trailing dot'   => [ 'pat@x.Mailinator.com.' ],
+			'blocked, as typed'         => [ 'pat@spam.example' ],
+			'blocked, full-width'       => [ "pat@\u{FF53}pam.example" ],
+		];
+	}
+
+	/**
+	 * A Unicode domain is looked up as its xn-- form, the one the list and
+	 * DNS use.
+	 */
+	public function test_a_unicode_domain_is_looked_up_as_punycode(): void {
+		$checker = $this->checker( [ 'xn--mnchen-3ya.example' ] );
+
+		$this->assertTrue( $checker->is_disposable( "pat@m\u{00FC}nchen.example" ) );
+		$this->assertSame( [ 'xn--mnchen-3ya.example', 'xn--bcher-kva.example' ], $checker->block( "B\u{00DC}cher.example" )->get_custom_blocked() );
+
+		// Mapped as browsers and mail servers now map it: ß is its own letter,
+		// not "ss" -- strasse.example is somebody else's domain.
+		$this->assertTrue( $checker->block( "stra\u{00DF}e.example" )->is_custom_blocked( 'xn--strae-oqa.example' ) );
+		$this->assertFalse( $checker->is_disposable( 'pat@strasse.example' ) );
+	}
+
+	/**
 	 * A bare top-level domain is never looked up, so a list naming "com"
 	 * would not block the world.
 	 */

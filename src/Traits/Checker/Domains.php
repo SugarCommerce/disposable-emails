@@ -41,8 +41,8 @@ trait Domains {
 	}
 
 	/**
-	 * The lower-cased domain of an address, a bare domain, or an object
-	 * with a domain() method; null when there is none.
+	 * The domain of an address, a bare domain, or an object with a domain()
+	 * method, as it is looked up; null when there is none.
 	 *
 	 * @param string|object $email What was given.
 	 *
@@ -56,7 +56,7 @@ trait Domains {
 			$domain = false === $at ? $email : substr( $email, $at + 1 );
 		}
 
-		$domain = is_string( $domain ) ? strtolower( trim( $domain ) ) : '';
+		$domain = is_string( $domain ) ? self::host( $domain ) : '';
 
 		return '' === $domain ? null : $domain;
 	}
@@ -74,9 +74,32 @@ trait Domains {
 			return '';
 		}
 
-		$domain = strtolower( trim( $domain ) );
-		$at     = strrpos( $domain, '@' );
+		$at = strrpos( $domain, '@' );
 
-		return false === $at ? $domain : substr( $domain, $at + 1 );
+		return self::host( false === $at ? $domain : substr( $domain, $at + 1 ) );
+	}
+
+	/**
+	 * A host name in the one form the lists use, so another way of writing
+	 * it cannot slip past: lower case, with no trailing dot
+	 * (`mailinator.com.` is an absolute name a mail server delivers to all
+	 * the same), and a Unicode name as its xn-- form, mapped the way IDNA
+	 * maps it -- so full-width `ｍａｉｌｉｎａｔｏｒ.com` and `mailinator。com`
+	 * are `mailinator.com`. Without the intl extension a Unicode name is
+	 * left as it is, and matches nothing.
+	 *
+	 * @param string $domain The domain.
+	 *
+	 * @return string
+	 */
+	private static function host( string $domain ): string {
+		$domain = trim( $domain );
+
+		if ( 1 === preg_match( '/[^\x00-\x7F]/', $domain ) && function_exists( 'idn_to_ascii' ) ) {
+			$ascii  = idn_to_ascii( $domain, IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46 );
+			$domain = false === $ascii ? $domain : $ascii;
+		}
+
+		return rtrim( strtolower( $domain ), '.' );
 	}
 }
