@@ -77,8 +77,8 @@ $checker->add_blocked( '@Throwaway.Example' );   // kept as "throwaway.example"
 ```
 
 The order answers are reached in: your allowed, then (for `is_disposable()`)
-the shipped allowlist, then your blocked, then the list. Your blocked and
-allowed domains are exact; the list also matches subdomains.
+the shipped allowlist, then your blocked, then the list. Your blocked
+domains and the list also match subdomains; your allowed domains are exact.
 
 ## Keeping the list current
 

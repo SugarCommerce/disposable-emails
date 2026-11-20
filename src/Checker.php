@@ -33,7 +33,8 @@ use SugarCommerce\DisposableEmails\Traits\Checker\Lists;
  *
  * The lists are read once, when first asked, and held as keys so a lookup
  * does not walk ten thousand lines. A subdomain of a listed domain is
- * listed: `x.mailinator.com` is `mailinator.com`.
+ * listed: `x.mailinator.com` is `mailinator.com`. So is a subdomain of a
+ * domain you block; a domain you allow is allowed exactly, and alone.
  *
  * In what order the answers are reached:
  *
@@ -165,7 +166,7 @@ final class Checker {
 			return false;
 		}
 
-		if ( isset( $this->custom_blocked[ $domain ] ) ) {
+		if ( $this->blocked_by_you( $domain ) ) {
 			return true;
 		}
 
@@ -188,7 +189,7 @@ final class Checker {
 			return false;
 		}
 
-		return isset( $this->custom_blocked[ $domain ] ) || $this->is_disposable( $email );
+		return $this->blocked_by_you( $domain ) || $this->is_disposable( $email );
 	}
 
 	/**

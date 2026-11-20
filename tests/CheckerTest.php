@@ -229,8 +229,17 @@ final class CheckerTest extends TestCase {
 		$this->assertFalse( $both->is_blocked( 'pat@both.example' ) );
 		$this->assertFalse( $both->is_disposable( 'pat@both.example' ) );
 
-		// Your blocked is exact: a subdomain is not blocked by it.
-		$this->assertFalse( $checker->is_disposable( 'pat@x.spam.example' ) );
+		// Your blocked covers its subdomains, as the list does: a provider
+		// answering for any name under its domain is not let through by a
+		// made-up one.
+		$this->assertTrue( $checker->is_disposable( 'pat@x.spam.example' ) );
+		$this->assertTrue( $checker->is_blocked( 'pat@x.y.spam.example' ) );
+		$this->assertFalse( $checker->is_blocked( 'pat@notspam.example' ) );
+
+		// Your allowed stays exact: allowing a subdomain lets in only it.
+		$checker->allow( 'ok.spam.example' );
+		$this->assertFalse( $checker->is_blocked( 'pat@ok.spam.example' ) );
+		$this->assertTrue( $checker->is_blocked( 'pat@x.ok.spam.example' ) );
 	}
 
 	/**

@@ -154,6 +154,19 @@ trait CustomDomains {
 	}
 
 	/**
+	 * Whether you blocked a domain or any domain it is under -- what
+	 * is_disposable() and is_blocked() ask. A provider answering for every
+	 * name under its domain is not let through by one made up on the spot.
+	 *
+	 * @param string $domain The domain, as domain_of() gives it.
+	 *
+	 * @return bool
+	 */
+	private function blocked_by_you( string $domain ): bool {
+		return isset( $this->custom_blocked[ $domain ] ) || self::listed( $domain, $this->custom_blocked );
+	}
+
+	/**
 	 * The domains you blocked.
 	 *
 	 * @return string[]
