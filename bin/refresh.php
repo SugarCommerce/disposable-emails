@@ -44,6 +44,8 @@ spl_autoload_register(
 const SOURCE  = 'https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/main/disposable_email_blocklist.conf';
 const MINIMUM = 5000;
 
+const MAXIMUM_BYTES = 16 * 1024 * 1024;
+
 if ( 'cli' !== PHP_SAPI ) {
 	exit( 1 );
 }
@@ -78,16 +80,23 @@ if ( isset( $files[0] ) ) {
 	$text = is_readable( $files[0] ) ? file_get_contents( $files[0] ) : false;
 	$from = $files[0];
 } else {
+	// Only ever the one host, over verified TLS: a redirect is refused
+	// rather than followed, and no more is read than a list could be.
 	$context = stream_context_create(
 		[
 			'http' => [
-				'timeout'       => 30,
-				'ignore_errors' => true,
-				'header'        => "User-Agent: sugarcommerce-disposable-emails-refresh\r\n",
+				'timeout'         => 30,
+				'ignore_errors'   => true,
+				'follow_location' => 0,
+				'header'          => "User-Agent: sugarcommerce-disposable-emails-refresh\r\n",
+			],
+			'ssl'  => [
+				'verify_peer'      => true,
+				'verify_peer_name' => true,
 			],
 		]
 	);
-	$text    = file_get_contents( SOURCE, false, $context );
+	$text    = file_get_contents( SOURCE, false, $context, 0, MAXIMUM_BYTES );
 	// $http_response_header is deprecated from PHP 8.5; its replacement is 8.4's.
 	$headers = function_exists( 'http_get_last_response_headers' ) ? http_get_last_response_headers() : ( $http_response_header ?? [] );
 	$status  = $headers[0] ?? '';
